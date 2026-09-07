@@ -13,7 +13,7 @@ Most of the time the original is still recoverable, because the scribes do not a
 
 ## Use it on your phone
 
-Open the live site, or add it to your Home Screen from the browser share menu. It is a Progressive Web App and works offline after the first load.
+Open **[walterfarrar.github.io/Witnesses](https://walterfarrar.github.io/Witnesses/)**, or add it to your Home Screen from the browser share menu. It is a Progressive Web App and works offline after the first load.
 
 If you are running it locally:
 
@@ -41,4 +41,4 @@ node --test test/engine.test.mjs
 
 ## Deploy
 
-The site is static files at the repository root. GitHub Pages can publish from `main`. Netlify can publish the same folder with the included `netlify.toml`.
+The site is static files at the repository root. GitHub Pages publishes from `main` to https://walterfarrar.github.io/Witnesses/. Netlify can publish the same folder with the included `netlify.toml`.
