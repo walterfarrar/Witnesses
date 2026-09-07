@@ -8,9 +8,8 @@ import {
   parentOf,
   highlightAgainst,
   scoreGuess,
-  normalizeText,
-  readingColor,
 } from "./engine.js";
+import { descendantCount, drawStemma, nodePoint } from "./tree.js";
 
 const state = {
   screen: "compose",
@@ -19,6 +18,7 @@ const state = {
   reconstructionChoices: [],
   guess: "",
   revealed: false,
+  treeZoom: 1,
 };
 
 const els = {
@@ -255,47 +255,104 @@ function renderReadings(tradition) {
 
 function renderTree(tradition) {
   const panel = els.tabPanels.tree;
+  const scroller = panel.querySelector(".evo-scroll");
+  const saved = scroller
+    ? { left: scroller.scrollLeft, top: scroller.scrollTop }
+    : { left: 0, top: 0 };
   panel.innerHTML = "";
+
   const hint = document.createElement("p");
   hint.className = "hint";
   hint.textContent =
-    "Each square is one copy. Color groups copies that say the same thing. Lost generations are faded.";
+    "Time runs down the page, like an evolutionary tree. Each split is a scribe copying a parent. Color is the wording — a new color is a mutation. Faded branches are lost copies.";
   panel.appendChild(hint);
 
-  const tree = document.createElement("div");
-  tree.className = "tree";
-  const groups = groupByGeneration(tradition.manuscripts);
-  for (const group of groups) {
-    const row = document.createElement("div");
-    row.className = "tree-row";
-    const lost = group.items.every((ms) => ms.hidden);
-    row.innerHTML = `<div class="gen-head"><strong>${lost ? "Lost · " : ""}${formatCirca(group.year)}</strong><span>${group.items.length} copies</span></div>`;
-    const dots = document.createElement("div");
-    dots.className = "tree-dots";
-    for (const ms of group.items) {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = "dot";
-      dot.title = `${ms.siglum} ${formatCirca(ms.year)}`;
-      dot.style.background = readingColor(normalizeText(ms.text));
-      if (ms.hidden) dot.style.opacity = "0.28";
-      if (ms.id === state.selectedMsId) dot.classList.add("selected");
-      dot.addEventListener("click", () => {
-        if (ms.hidden) return;
-        state.selectedMsId = ms.id;
-        renderTree(tradition);
-        const preview = panel.querySelector("[data-preview]");
-        if (preview) preview.remove();
-        const card = manuscriptCard(tradition, ms, tradition.reconstruction.text);
-        card.dataset.preview = "true";
-        panel.appendChild(card);
-      });
-      dots.appendChild(dot);
-    }
-    row.appendChild(dots);
-    tree.appendChild(row);
+  const toolbar = document.createElement("div");
+  toolbar.className = "evo-toolbar";
+  const fitBtn = document.createElement("button");
+  fitBtn.type = "button";
+  fitBtn.className = "ghost evo-tool";
+  fitBtn.textContent = "Fit tree";
+  const minusBtn = document.createElement("button");
+  minusBtn.type = "button";
+  minusBtn.className = "ghost evo-tool";
+  minusBtn.textContent = "−";
+  minusBtn.setAttribute("aria-label", "Zoom out");
+  const plusBtn = document.createElement("button");
+  plusBtn.type = "button";
+  plusBtn.className = "ghost evo-tool";
+  plusBtn.textContent = "+";
+  plusBtn.setAttribute("aria-label", "Zoom in");
+  toolbar.append(fitBtn, minusBtn, plusBtn);
+  panel.appendChild(toolbar);
+
+  const viewport = document.createElement("div");
+  viewport.className = "evo-viewport";
+  const scroll = document.createElement("div");
+  scroll.className = "evo-scroll";
+
+  const selectedId = state.selectedMsId ?? tradition.manuscripts[0]?.id;
+  const { svg, layout } = drawStemma(tradition, {
+    selectedId,
+    onSelect: (id) => {
+      const shouldCenter = state.treeZoom > 1;
+      state.selectedMsId = id;
+      renderTree(tradition);
+      if (shouldCenter) centerTreeNode(tradition, layout, id);
+    },
+  });
+  svg.style.width = `${Math.max(100, state.treeZoom * 100)}%`;
+  scroll.appendChild(svg);
+  viewport.appendChild(scroll);
+  panel.appendChild(viewport);
+  scroll.scrollLeft = saved.left;
+  scroll.scrollTop = saved.top;
+
+  fitBtn.addEventListener("click", () => {
+    state.treeZoom = 1;
+    renderTree(tradition);
+  });
+  minusBtn.addEventListener("click", () => {
+    state.treeZoom = Math.max(1, Math.round((state.treeZoom - 0.7) * 10) / 10);
+    renderTree(tradition);
+  });
+  plusBtn.addEventListener("click", () => {
+    state.treeZoom = Math.min(6, Math.round((state.treeZoom + 0.7) * 10) / 10);
+    renderTree(tradition);
+  });
+
+  const selected = tradition.manuscripts.find((ms) => ms.id === selectedId);
+  if (selected) {
+    const preview = selected.hidden
+      ? lostCard(tradition, selected)
+      : manuscriptCard(tradition, selected, tradition.reconstruction.text);
+    preview.dataset.preview = "true";
+    panel.appendChild(preview);
   }
-  panel.appendChild(tree);
+}
+
+function centerTreeNode(tradition, layout, id) {
+  const panel = els.tabPanels.tree;
+  const next = panel.querySelector(".evo-scroll");
+  const drawn = panel.querySelector(".evo-svg");
+  const node = tradition.manuscripts.find((ms) => ms.id === id);
+  if (!next || !drawn || !node) return;
+  const point = nodePoint(node, layout);
+  const box = drawn.viewBox.baseVal;
+  const scaleX = drawn.clientWidth / box.width;
+  const scaleY = drawn.clientHeight / box.height;
+  next.scrollLeft = point.x * scaleX - next.clientWidth / 2;
+  next.scrollTop = point.y * scaleY - next.clientHeight / 2;
+}
+
+function lostCard(tradition, ms) {
+  const later = descendantCount(tradition.manuscripts, ms.id, true);
+  const parent = parentOf(tradition, ms);
+  const card = document.createElement("article");
+  card.className = "ms-card lost-card";
+  card.innerHTML = `<div class="ms-meta"><span>${ms.siglum} · ${formatCirca(ms.year)}</span><span>lost copy</span></div>
+    <div class="ms-text">This generation did not survive. The wording is hidden, just as the autograph is. ${later} later cop${later === 1 ? "y" : "ies"} still descend from it${parent ? `, through ${parent.siglum}` : ""}.</div>`;
+  return card;
 }
 
 function renderAssembler(tradition) {

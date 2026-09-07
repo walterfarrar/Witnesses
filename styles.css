@@ -366,37 +366,95 @@ details.more summary::-webkit-details-marker {
   opacity: 0.7;
 }
 
-.tree {
+.evo-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.tree-row {
-  display: flex;
-  flex-direction: column;
   gap: 8px;
+  margin: 10px 0 12px;
 }
 
-.tree-dots {
-  display: flex;
-  gap: 7px;
+.evo-tool {
+  width: auto;
+  min-width: 44px;
+  padding: 0 14px;
+}
+
+.evo-viewport {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #100e0b;
+  border: 1px solid var(--line);
+}
+
+.evo-scroll {
   overflow: auto;
-  padding-bottom: 4px;
+  max-height: min(68vh, 560px);
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
 }
 
-.dot {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 0;
-  flex: 0 0 auto;
-  cursor: pointer;
+.evo-svg {
+  display: block;
+  height: auto;
+  min-height: 420px;
 }
 
-.dot.selected {
-  outline: 2px solid var(--gold-2);
-  outline-offset: 2px;
+.evo-year {
+  fill: #8d7c62;
+  font-size: 11px;
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  font-weight: 700;
+}
+
+.evo-branch {
+  fill: none;
+  stroke-width: 1.4;
+  opacity: 0.72;
+}
+
+.evo-branch.lost {
+  stroke-dasharray: 3 3;
+  opacity: 0.35;
+}
+
+.evo-branch.on {
+  fill: none;
+  stroke: #f0d78c;
+  stroke-width: 2.6;
+  opacity: 0.95;
+}
+
+.evo-hit {
+  fill: transparent;
+}
+
+.evo-dot {
+  stroke: #14110e;
+  stroke-width: 1;
+}
+
+.evo-node.lost .evo-dot {
+  opacity: 0.32;
+  stroke-dasharray: 2 2;
+}
+
+.evo-node.selected .evo-dot {
+  stroke: #f0d78c;
+  stroke-width: 3;
+}
+
+.evo-node.lineage .evo-dot {
+  filter: brightness(1.15);
+}
+
+.evo-root-label {
+  fill: #cbb896;
+  font-size: 11px;
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+  font-weight: 700;
+}
+
+.lost-card {
+  background: #d8c7a8;
 }
 
 .hint {

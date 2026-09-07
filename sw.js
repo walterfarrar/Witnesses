@@ -1,10 +1,11 @@
-const CACHE = "witnesses-v1";
+const CACHE = "witnesses-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./js/app.js",
   "./js/engine.js",
+  "./js/tree.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-192.png",
