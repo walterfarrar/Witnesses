@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14110e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="Type a sentence, watch generations of scribes copy it with tiny errors, hide the earliest copies, and try to recover the original — a phone lab for biblical textual reliability."
+    />
+    <title>Witnesses — recover the original text</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,620&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main>
+      <section class="screen active" data-screen="compose">
+        <header class="masthead">
+          <p class="kicker">Manuscript lab</p>
+          <h1>Witnesses</h1>
+          <p class="lede">
+            Type a sentence. Scribes will copy it, then copy the copies, for generations. Tiny
+            mistakes will creep in. We will hide the original — just as the first New Testament
+            pages are gone — and see whether the later, dated copies can still tell us what it said.
+          </p>
+        </header>
+
+        <div class="panel">
+          <label class="field">
+            Your original sentence
+            <textarea id="original" maxlength="280" placeholder="Write one sentence…"></textarea>
+          </label>
+          <div id="samples" class="chips" aria-label="Sample sentences"></div>
+        </div>
+
+        <div class="panel">
+          <details class="more">
+            <summary>Copying settings</summary>
+            <div class="settings" style="margin-top: 14px">
+              <label>
+                Generations
+                <select id="generations">
+                  <option value="5">5</option>
+                  <option value="6" selected>6</option>
+                  <option value="7">7</option>
+                </select>
+              </label>
+              <label>
+                Hide first
+                <select id="hideGenerations">
+                  <option value="1">1 generation</option>
+                  <option value="2" selected>2 generations</option>
+                </select>
+              </label>
+              <label>
+                Scribes
+                <select id="care">
+                  <option value="careful" selected>Careful</option>
+                  <option value="typical">Typical</option>
+                  <option value="sloppy">Sloppy</option>
+                </select>
+              </label>
+              <label>
+                First year
+                <input id="startYear" type="number" value="60" min="-900" max="1800" />
+              </label>
+            </div>
+          </details>
+        </div>
+
+        <div class="sticky-actions">
+          <button id="copyBtn" class="primary" type="button">Copy it for centuries</button>
+        </div>
+        <p class="install-tip">
+          On this phone: add Witnesses to your Home Screen from the browser share menu so it opens
+          like an app, even offline.
+        </p>
+      </section>
+
+      <section class="screen" data-screen="copying">
+        <header class="masthead">
+          <p class="kicker">Transmission</p>
+          <h1 id="copyStatus">Scribes are copying…</h1>
+          <p class="lede">Each generation is dated. Errors stay small and are not all the same.</p>
+        </header>
+        <div id="copyStats" class="stat-grid"></div>
+        <div id="copyLog" class="log" aria-live="polite"></div>
+        <button id="skipCopyBtn" class="secondary" type="button">Skip to the survivors</button>
+      </section>
+
+      <section class="screen" data-screen="study">
+        <header class="masthead">
+          <p class="kicker">Surviving witnesses</p>
+          <h2>Piece the original back together</h2>
+        </header>
+        <div id="hiddenNote" class="hidden-note"></div>
+        <div id="studyStats" class="stat-grid"></div>
+        <p class="hint">Rust-colored words differ from the working reconstruction.</p>
+        <div id="tabs" class="tabs">
+          <button class="tab active" data-tab="witnesses" type="button">Copies</button>
+          <button class="tab" data-tab="readings" type="button">Variants</button>
+          <button class="tab" data-tab="tree" type="button">Family tree</button>
+          <button class="tab" data-tab="reconstruct" type="button">Reconstruct</button>
+        </div>
+        <div id="panel-witnesses" class="panel"></div>
+        <div id="panel-readings" class="panel" hidden></div>
+        <div id="panel-tree" class="panel" hidden></div>
+        <div id="panel-reconstruct" class="panel" hidden>
+          <p class="hint">Tap a reading for each word, or type the sentence you think was first.</p>
+          <div id="assembler" class="assemble"></div>
+          <label class="field" style="margin-top: 14px">
+            Your reconstruction
+            <textarea id="guess" maxlength="320" placeholder="What did the original say?"></textarea>
+          </label>
+          <div class="row">
+            <button id="useScholar" class="ghost" type="button">Use dated majority</button>
+            <button id="useMajority" class="ghost" type="button">Use most copies</button>
+          </div>
+        </div>
+        <div class="sticky-actions">
+          <button id="revealBtn" class="primary" type="button">Reveal the original</button>
+          <button id="backToCompose" class="ghost" type="button">Start over</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="reveal">
+        <header class="masthead">
+          <p class="kicker">Autograph revealed</p>
+          <h1>How close did we get?</h1>
+        </header>
+        <div id="revealBody"></div>
+        <div class="sticky-actions">
+          <button id="againBtn" class="primary" type="button">Try another sentence</button>
+          <button id="shareBtn" class="secondary" type="button">Share</button>
+        </div>
+        <p class="footer-note">A teaching toy, not a critical edition of any biblical book.</p>
+      </section>
+    </main>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

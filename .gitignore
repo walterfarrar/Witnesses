@@ -1,0 +1,8 @@
+.netlify
+.DS_Store
+node_modules
+*.log
+.idea
+.vscode
+agent-tools
+terminals
