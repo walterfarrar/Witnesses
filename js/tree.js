@@ -134,6 +134,14 @@ export function drawStemma(tradition, { selectedId, onSelect }) {
     });
     const lost = tradition.manuscripts.some((ms) => ms.generation === generation && ms.hidden);
     label.textContent = `${lost ? "lost " : ""}${formatCirca(year)}`;
+    label.style.cursor = "pointer";
+    label.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const pick =
+        tradition.manuscripts.find((ms) => ms.generation === generation && ms.id === selectedId) ??
+        tradition.manuscripts.find((ms) => ms.generation === generation);
+      if (pick) onSelect(pick.id);
+    });
     bands.appendChild(label);
   }
   svg.appendChild(bands);
@@ -176,16 +184,17 @@ export function drawStemma(tradition, { selectedId, onSelect }) {
       transform: `translate(${point.x} ${point.y})`,
       "data-id": ms.id,
     });
+    const radius = ms.generation <= 1 ? 9 : ms.generation <= 2 ? 7 : 5.5;
     group.appendChild(
       svgEl("circle", {
         class: "evo-hit",
-        r: 16,
+        r: ms.generation <= 2 ? 22 : 16,
       }),
     );
     group.appendChild(
       svgEl("circle", {
         class: "evo-dot",
-        r: ms.generation === 0 ? 8 : 6,
+        r: radius,
         fill: readingColor(normalizeText(ms.text)),
       }),
     );

@@ -311,6 +311,11 @@ function renderTree(tradition) {
   fitBtn.addEventListener("click", () => {
     state.treeZoom = 1;
     renderTree(tradition);
+    const next = panel.querySelector(".evo-scroll");
+    if (next) {
+      next.scrollLeft = 0;
+      next.scrollTop = 0;
+    }
   });
   minusBtn.addEventListener("click", () => {
     state.treeZoom = Math.max(1, Math.round((state.treeZoom - 0.7) * 10) / 10);
