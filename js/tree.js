@@ -152,10 +152,7 @@ export function drawStemma(tradition, { selectedId, onSelect }) {
     if (ms.parentId == null) continue;
     const parent = tradition.manuscripts.find((item) => item.id === ms.parentId);
     if (!parent) continue;
-    const a = nodePoint(parent, layout);
-    const b = nodePoint(ms, layout);
-    const midY = (a.y + b.y) / 2;
-    const d = `M ${a.x} ${a.y} V ${midY} H ${b.x} V ${b.y}`;
+    const d = branchPath(parent, ms, layout);
     const muted = svgEl("path", {
       d,
       class: `evo-branch${ms.hidden || parent.hidden ? " lost" : ""}`,
@@ -233,4 +230,32 @@ export function drawStemma(tradition, { selectedId, onSelect }) {
   });
 
   return { svg, layout, width, height };
+}
+
+function branchPath(parent, child, layout) {
+  const a = nodePoint(parent, layout);
+  const b = nodePoint(child, layout);
+  const midY = (a.y + b.y) / 2;
+  return `M ${a.x} ${a.y} V ${midY} H ${b.x} V ${b.y}`;
+}
+
+export function updateStemmaSelection(svg, tradition, selectedId) {
+  if (!svg) return;
+  const layout = layoutStemma(tradition.manuscripts);
+  const selected = lineageIds(tradition.manuscripts, selectedId);
+  svg.querySelectorAll(".evo-node").forEach((node) => {
+    const id = Number(node.getAttribute("data-id"));
+    node.classList.toggle("selected", id === selectedId);
+    node.classList.toggle("lineage", selected.has(id));
+  });
+  const highlight = svg.querySelector(".evo-highlight");
+  if (!highlight) return;
+  highlight.replaceChildren();
+  for (const ms of tradition.manuscripts) {
+    if (ms.parentId == null) continue;
+    if (!selected.has(ms.id) || !selected.has(ms.parentId)) continue;
+    const parent = tradition.manuscripts.find((item) => item.id === ms.parentId);
+    if (!parent) continue;
+    highlight.appendChild(svgEl("path", { d: branchPath(parent, ms, layout), class: "evo-branch on" }));
+  }
 }

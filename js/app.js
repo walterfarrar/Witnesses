@@ -9,7 +9,7 @@ import {
   highlightAgainst,
   scoreGuess,
 } from "./engine.js";
-import { descendantCount, drawStemma, nodePoint } from "./tree.js";
+import { descendantCount, drawStemma, nodePoint, updateStemmaSelection } from "./tree.js";
 
 const state = {
   screen: "compose",
@@ -46,6 +46,7 @@ const els = {
   guessField: document.querySelector("#guess"),
   useScholar: document.querySelector("#useScholar"),
   useMajority: document.querySelector("#useMajority"),
+  selectedWitness: document.querySelector("#selectedWitness"),
   revealBtn: document.querySelector("#revealBtn"),
   backToCompose: document.querySelector("#backToCompose"),
   revealBody: document.querySelector("#revealBody"),
@@ -295,10 +296,11 @@ function renderTree(tradition) {
   const { svg, layout } = drawStemma(tradition, {
     selectedId,
     onSelect: (id) => {
-      const shouldCenter = state.treeZoom > 1;
       state.selectedMsId = id;
-      renderTree(tradition);
-      if (shouldCenter) centerTreeNode(tradition, layout, id);
+      const drawn = panel.querySelector(".evo-svg");
+      updateStemmaSelection(drawn, tradition, id);
+      showDockedWitness(tradition, id);
+      if (state.treeZoom > 1) centerTreeNode(tradition, layout, id);
     },
   });
   svg.style.width = `${Math.max(100, state.treeZoom * 100)}%`;
@@ -326,14 +328,24 @@ function renderTree(tradition) {
     renderTree(tradition);
   });
 
-  const selected = tradition.manuscripts.find((ms) => ms.id === selectedId);
-  if (selected) {
-    const preview = selected.hidden
-      ? lostCard(tradition, selected)
-      : manuscriptCard(tradition, selected, tradition.reconstruction.text);
-    preview.dataset.preview = "true";
-    panel.appendChild(preview);
+  showDockedWitness(tradition, selectedId);
+}
+
+function showDockedWitness(tradition, id) {
+  const dock = els.selectedWitness;
+  if (!dock) return;
+  const selected = tradition.manuscripts.find((ms) => ms.id === id);
+  dock.replaceChildren();
+  if (!selected) {
+    dock.hidden = true;
+    return;
   }
+  const preview = selected.hidden
+    ? lostCard(tradition, selected)
+    : manuscriptCard(tradition, selected, tradition.reconstruction.text);
+  preview.dataset.preview = "true";
+  dock.appendChild(preview);
+  dock.hidden = state.screen !== "study" || !els.tabPanels.tree || els.tabPanels.tree.hidden;
 }
 
 function centerTreeNode(tradition, layout, id) {
@@ -399,6 +411,9 @@ function setTab(name) {
   Object.entries(els.tabPanels).forEach(([key, panel]) => {
     panel.hidden = key !== name;
   });
+  if (els.selectedWitness) {
+    els.selectedWitness.hidden = name !== "tree" || !els.selectedWitness.childElementCount;
+  }
 }
 
 function escapeHtml(value) {
@@ -474,6 +489,10 @@ function shareTradition() {
 function resetCompose() {
   state.tradition = null;
   state.revealed = false;
+  if (els.selectedWitness) {
+    els.selectedWitness.replaceChildren();
+    els.selectedWitness.hidden = true;
+  }
   showScreen("compose");
 }
 
